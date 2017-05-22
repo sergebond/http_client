@@ -1,10 +1,10 @@
 -module(hc_utils).
 -author("srg").
 
-%% API
--export([
-  encode/2
-]).
+%%%% API
+%%-export([
+%%  encode/2
+%%]).
 
 -export([
   to_json/1,
@@ -18,19 +18,6 @@
   urlencode/1,
   get_unixtime/0
 ]).
-
--spec encode(string(), list()) -> {ok, term()}|{error, term()}.
-encode("application/json", List) ->
-  to_json(List);
-
-encode("application/xml", List) ->
-  exomler:encode(List); %% @todo it will crash
-
-encode("application/x-www-form-urlencoded", List) ->
-  join_form(List);
-
-%%encode("multipart/form-data", List) -> ok.
-encode(_, List) -> {error, <<"Unknown content type">>}.
 
 %%----------------------------------------------------------------------
 %%                        JSON ENCODE/DECODE
@@ -178,25 +165,6 @@ to_bin(X) when is_float(X) -> float_to_binary(X, [{decimals, 4}]).
 join_form(Form) ->
   UrlPars  = [ << (urlencode(to_bin(K)))/binary, <<"=">>/binary, (urlencode(to_bin(V)))/binary >>||{K,V} <- Form ],
   bjoin(UrlPars, <<"&">>).
-
-
-get_host_from_url(Url) when is_list(Url) ->
-  Res = http_uri:parse(Url),
-  case Res of
-    {ok,{Scheme, _UserInfo, Host, _Port, _Path, _Query}} ->
-      << (to_bin(Scheme))/binary, "://", (to_bin(Host))/binary >>;
-    _ -> error
-  end.
-
-convert_resp_body(Head, BinaryBody) ->
-  ContentType = get_value("content-type", Head),
-  case ContentType of
-    "application/json" ++ _ -> from_json(BinaryBody);
-    "text/xml" ++ _ -> exomler:decode(BinaryBody);
-    "application/x-www-form-urlencoded" ++ _ -> x_www_form_urlencoded(BinaryBody);
-    _ -> BinaryBody
-  end.
-
 
 -spec urlencode(B) -> B when B::binary().
 urlencode(B) ->
