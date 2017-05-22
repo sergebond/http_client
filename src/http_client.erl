@@ -4,14 +4,18 @@
 
 %% API
 -export([
+  request/1,
   request/2,
   request/3 ]).
 
--spec request(list(), term(), #http_request_profile{}) -> {ok, term()}|{error, term()}.
-request(Body, Profile) when is_list(Body) ->
-  request("", Body, Profile).
+request(Profile) ->
+  request("", [], Profile).
 
--spec request(list(), term(), #http_request_profile{}) -> {ok, term()}|{error, term()}.
+-spec request(list()|binary(), #http_request_profile{}) -> {ok, term()}|{error, term()}.
+request(Body, Profile) when is_list(Body) ->
+  request(Body, "", Profile).
+
+-spec request(list()|binary(), list()|binary(), #http_request_profile{}) -> {ok, term()}|{error, term()}.
 request( Body, QueryString, Profile) when is_record(Profile, http_request_profile), is_list(QueryString) ->
   try
     make_request(Body, QueryString, Profile)
@@ -76,8 +80,8 @@ get_url(_,_) ->
   throw({error, <<"'Url' must be a string">>}).
 
 req(Method, Params, #http_request_profile{attempts = Attempts} = Profile) ->
-  ok = application:ensure_started(inets),
-  ok = application:ensure_started(ssl),
+  {ok, _Apps0} = application:ensure_all_started(inets),
+  {ok, _Apps1} = application:ensure_all_started(ssl),
   try_req(Method, Params, Profile, Attempts, []).
 
 try_req(_Method, _Params, _Profile, 0, Errors) ->
