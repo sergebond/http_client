@@ -16,7 +16,8 @@
   bjoin/2,
   to_bin/1,
   urlencode/1,
-  get_unixtime/0
+  get_unixtime/0,
+  join_form/1
 ]).
 
 %%----------------------------------------------------------------------

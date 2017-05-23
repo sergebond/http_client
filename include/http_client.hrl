@@ -8,6 +8,7 @@
 %% |"text/xml"|"text/json"|"text|csv"
 
 -type method() :: get|post|put|delete|options.
+-type format() :: json | xml | 'x-form' | multipart | none.%% @todo
 
 -record(http_request_profile, {
   method = post :: method(),
@@ -19,7 +20,7 @@
   options = [{body_format, binary}] :: proplists:proplist()|[],
   attempts = ?MAX_ATTEMPTS,
   delay = ?DELAY,
-  resp_converter = auto :: json | xml | 'x-form' | multipart | none | auto %% @todo
+  resp_converter = auto :: format() | auto
 }).
 
 -record(http_response, {
