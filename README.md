@@ -14,3 +14,7 @@
   #http_response{status = 200, head = Head, body = RespBody } = http_client:request(ReqBody, Profile),
   true = is_list(RespBody)
 ```
+... to be continued
+
+
+You can find more use cases in tests folder
