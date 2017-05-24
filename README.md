@@ -1,5 +1,5 @@
 # HTTP_CLIENT
-Makes http requests with serializing request body according profile and deserializing response body according to content type
+Makes http requests with serializing request body according to profile and deserializing response body according to content type
 ## basic usage
 ```
   Url = ?TEST_URL ++ "/post",
