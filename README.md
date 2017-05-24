@@ -1,4 +1,5 @@
 # HTTP_CLIENT
+Makes http requests with serializing request body according profile and deserializing response body according to content type
 ## basic usage
 ```
   Url = ?TEST_URL ++ "/post",
@@ -15,6 +16,5 @@
   true = is_list(RespBody)
 ```
 ... to be continued
-
 
 You can find more use cases in tests folder
