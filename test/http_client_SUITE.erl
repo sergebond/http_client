@@ -11,14 +11,19 @@
 
 all() ->
   [
-    get_json_auto,
-    get_json_none,
-    get_json_query_string,
-    get_json_bad
+    {group, get}
   ].
 
 groups() ->
-  [].
+  [
+    {get, [parallel],
+      [
+        get_json_auto,
+        get_json_none,
+        get_json_query_string,
+        get_json_bad
+      ]}
+  ].
 
 init_per_suite(Config) ->
   Config.
@@ -36,16 +41,13 @@ get_json_auto(Config) ->
     },
   BinUrl = list_to_binary(Url),
   #http_response{status = 200, head = Head, body = Body } = http_client:request(Profile),
-
   ct:pal("get_json_auto Head ~p~nBody ~p", [Head, Body]),
-
   case Body of
     [{<<"args">>, _}, {<<"headers">>,_}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
     Bad ->
       ct:pal("get_json_auto FAILED Result ~p", [Bad]),
       {fail, Config}
   end.
-
 
 get_json_none(Config) ->
   Url = ?TEST_URL ++ "/get",
@@ -57,11 +59,8 @@ get_json_none(Config) ->
     },
   BinUrl = list_to_binary(Url),
   #http_response{status = 200, head = Head, body = Body } = http_client:request(Profile),
-
   ct:pal("get_json_none Head ~p~nBody ~p", [Head, Body]),
-
   ?assertMatch(#{<<"url">> := BinUrl}, maps:from_list(hc_utils:from_json(Body))),
-
   case hc_utils:from_json(Body) of
     [{<<"args">>, _}, {<<"headers">>,_}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
     Bad ->
@@ -77,17 +76,10 @@ get_json_query_string(Config) ->
       method = get,
       resp_converter = json
     },
-
   QueryString = [{<<"foo">>, 1},{<<"bar">>, 2}, {<<"baz">>, qwerty}],
-
   #http_response{status = 200, head = Head, body = Body } = http_client:request(_BodyO = [], QueryString, Profile),
-
   BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(hc_utils:join_form(QueryString))),
-
   ct:pal("get_query_string Head ~p~nBody ~p", [Head, Body]),
-
-  ?assertMatch(#{<<"url">> := BinUrl}, maps:from_list(Body)),
-
   case Body of
     [{<<"args">>, _}, {<<"headers">>,_}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
     Bad ->
@@ -103,12 +95,8 @@ get_json_bad(Config) ->
       method = get,
       resp_converter = xml %% Bad format
     },
-%%  BinUrl = list_to_binary(Url),
-
   Resp = http_client:request(Profile),
-
   ct:pal("Body ~p", [Resp]),
-
   case Resp of
     {error,
       <<"Could not deserialize xml \n<<\"{\\n  \\\"args\\\": {}, \\n  \\\"headers\\\": {\\n    \\\"Connection\\\": \\\"close\\\", \\n    \\\"Host\\\": \\\"httpbin.org\\\"\\n  }, \\n  \\\"origin\\\": \\\"212.3.124.206\\\", \\n  \\\"url\\\": \\\"https://httpbin.org/get\\\"\\n}\\n\">> ">>} -> Config;
@@ -116,5 +104,3 @@ get_json_bad(Config) ->
       ct:pal("get_json_query_string FAILED Result ~p", [Bad]),
       {fail, Config}
   end.
-
-%%  Config.
