@@ -12,11 +12,11 @@
 request(Profile) ->
   request("", [], Profile).
 
--spec request(list()|binary(), #http_request_profile{}) -> #http_response{}|{error, term()}.
-request(Body, Profile) when is_list(Body) ->
+-spec request(term(), #http_request_profile{}) -> #http_response{}|{error, term()}.
+request(Body, Profile) ->
   request(Body, "", Profile).
 
--spec request(list()|binary(), list()|binary(), #http_request_profile{}) -> #http_response{}|{error, term()}.
+-spec request(term(), list()|binary(), #http_request_profile{}) -> #http_response{}|{error, term()}.
 request( Body, QueryString, Profile) when is_record(Profile, http_request_profile), is_list(QueryString) ->
   try
     make_request(Body, QueryString, Profile)
@@ -37,7 +37,7 @@ get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head}
   {Url, Head};
 
 get_params(Url, Body, #http_request_profile{method = Method, headers = Head, url = Url, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
-  CT = get_content_type(CT, CS),
+  ContentType = get_content_type(CT, CS),
   SerializedBody =
     try serialize_body(CT, Body) of
       {error, Reason} -> error_mess(Reason);
@@ -45,8 +45,7 @@ get_params(Url, Body, #http_request_profile{method = Method, headers = Head, url
     catch
       _:_ -> error_mess("Could not serialize '~p' body ~n~p ", [CT, Body])
     end,
-
-  {Url, Head, CT, SerializedBody}.
+  {Url, Head, ContentType, SerializedBody}.
 
 -spec serialize_body(string(), list()|proplists:proplist()) -> {ok, term()}|{error, term()}.
 serialize_body(CT, Body) when is_binary(Body) orelse CT == "text/plain" ->
@@ -108,21 +107,24 @@ try_req(Method, Params, #http_request_profile{options = Opts, http_options = Hop
 resolve_response(#http_response{status = 200, head = Head, body = Body} = Resp, #http_request_profile{resp_converter = Converter}) ->
   Resp#http_response{body = resp_body_as_term(Converter, Body, Head)};
 
-resolve_response(#http_response{status = 302, head = Head}, #http_request_profile{url = Url}) ->
+resolve_response(#http_response{status = 302, head = Head}, #http_request_profile{url = Url}) -> %% todo Another 300....
   Location0 = hc_utils:get_value("location", Head),
   case Location0 of
     "/" ++ _Rest ->
       Host = get_host_from_url(Url),
       Host ++ Location0;
     "http" ++  _ -> Location0
-  end.
+  end;
+
+resolve_response(#http_response{status = Status, body = Body} = Resp, _) when Status >= 400 -> %% todo Another 400....500...
+  Resp#http_response{body = Body}.
 
 resp_body_as_term(auto, BinaryBody, Head) ->
   ContentType = hc_utils:get_value("content-type", Head),
   ConvertFrom =
     case ContentType of
-      "application/json" ++ _ -> json;
-      "text/xml" ++ _ -> xml;
+      "application/json" ++ _ -> json; %% todo text/json
+      "application/xml" ++ _ -> xml; %% todo text/xml
       "application/x-www-form-urlencoded" ++ _ -> 'x-form';
       _ -> error_mess( "Unknown content type ~p", [ContentType])
     end,
