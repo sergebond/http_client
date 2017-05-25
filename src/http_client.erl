@@ -43,32 +43,36 @@ get_params(Url, Body, #http_request_profile{method = Method, headers = Head, con
       {error, Reason} -> error_mess(Reason);
       Result -> Result
     catch
-      _:_ -> error_mess("Could not serialize '~p' body ~n~p ", [CT, Body])
+      _:_ ->
+        error_mess("Could not serialize '~p' body ~n~p ", [CT, Body])
     end,
   {Url, Head, ContentType, SerializedBody}.
 
 -spec serialize_body(string(), list()|proplists:proplist()) -> {ok, term()}|{error, term()}.
-serialize_body(CT, Body) when is_binary(Body) orelse CT == "text/plain" ->
-  Body;
-serialize_body("application/json", List) ->
+serialize_body(_, []) -> <<>>;
+serialize_body(_CT, Body) when is_binary(Body) -> Body;
+serialize_body("application/json", List) when is_list(List) ->
   case hc_utils:to_json(List) of
     <<"error json encode">> ->
       {error, <<"Error json encode">>};
     Body when is_binary(Body) -> Body
   end;
-serialize_body("application/xml", List) ->
-  case List of
+serialize_body("application/xml", Tuple) when is_tuple(Tuple) ->
+  case Tuple of
     {xml, _Version, _Encoding, _RootElement} ->
-      exomler:encode_document(List);
+      exomler:encode_document(Tuple);
     {_Tag, _Attrs, _Content} = RE ->
       exomler:encode_document({xml,'1.0',utf8, RE });
     _ ->
       { error, << "What a fuck have you just passed. Wrong xml term, mothefucker!!!" >> }
   end;
-serialize_body("application/x-www-form-urlencoded", List) ->
+serialize_body("application/x-www-form-urlencoded", List) when is_list(List) ->
   hc_utils:join_form(List);
 %%encode("multipart/form-data", List) -> ok. %% @todo
-serialize_body(_, _List) -> {error, <<"Unknown content type">>}.
+serialize_body(_, List) when is_list(List) ->
+  {error, <<"Unknown content type">>};
+serialize_body(Ct, Body) ->
+  error_mess("Couldn't serialize body ~p into ~p", [Body, Ct]).
 
 -spec get_content_type(string(), string()) -> nonempty_string()|no_return().
 get_content_type(CT0, Charset) when is_list(CT0), is_list(Charset) ->

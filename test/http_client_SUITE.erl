@@ -16,7 +16,8 @@ all() ->
     {group, get},
     {group, post},
     {group, response_decode},
-    {group, http_codes}
+    {group, http_codes},
+    {group, errors}
   ].
 
 groups() ->
@@ -42,8 +43,11 @@ groups() ->
     {http_codes, [parallel],
       [
         '405'
+      ]},
+    {errors, [parallel],
+      [
+        wrong_body_serialize
       ]}
-
   ].
 
 init_per_suite(Config) ->
@@ -242,9 +246,27 @@ post_waiting_response_xml(Config) ->
       url = Url,
       method = post
     },
-  #http_response{status = 405, head = _Head, body = RespBody } = http_client:request( Profile),
+  #http_response{status = 405, head = _Head, body = RespBody } = http_client:request(Profile),
   case RespBody of
     RespBody when is_binary(RespBody) -> Config;
     _ -> ct:pal("405 FAILED Result ~p", [RespBody]),
+      {fail, <<"Fail">>}
+  end.
+
+%% ERRORS
+%%______________________________________________________________________________________________________________________
+wrong_body_serialize(Config) ->
+  Url = ?TEST_URL ++ "/post",
+  Profile =
+    #http_request_profile{
+      url = Url,
+      method = post
+    },
+  Body = {1, 2, 3},
+  Resp = http_client:request(Body, Profile),
+  case Resp of
+    {error,<<"Could not serialize '\"text/plain\"' body \n{1,2,3} ">>} -> Config;
+
+    _ -> ct:pal("wrong_body_serialize FAILED Result ~p", [Resp]),
       {fail, <<"Fail">>}
   end.
