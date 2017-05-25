@@ -36,7 +36,7 @@ make_request( Body, QueryString, #http_request_profile{method = Method, url = Ur
 get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head}) when GetOrHead == get; GetOrHead == head ->
   {Url, Head};
 
-get_params(Url, Body, #http_request_profile{method = Method, headers = Head, url = Url, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
+get_params(Url, Body, #http_request_profile{method = Method, headers = Head, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
   ContentType = get_content_type(CT, CS),
   SerializedBody =
     try serialize_body(CT, Body) of
