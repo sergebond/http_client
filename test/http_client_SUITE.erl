@@ -13,6 +13,7 @@
 
 all() ->
   [
+%%    {group, all}
     {group, get},
     {group, post},
     {group, response_decode},
@@ -22,6 +23,13 @@ all() ->
 
 groups() ->
   [
+    {all, [parallel], [
+      {group, get},
+      {group, post},
+      {group, response_decode},
+      {group, http_codes},
+      {group, errors}
+    ]},
     {get, [parallel],
       [
         get_json_auto,
@@ -46,7 +54,8 @@ groups() ->
       ]},
     {errors, [parallel],
       [
-        wrong_body_serialize
+        wrong_body_serialize,
+        several_attempts_with_timeout_err
       ]}
   ].
 
@@ -269,4 +278,25 @@ wrong_body_serialize(Config) ->
 
     _ -> ct:pal("wrong_body_serialize FAILED Result ~p", [Resp]),
       {fail, <<"Fail">>}
+  end.
+
+several_attempts_with_timeout_err(Config) ->
+  Url = ?TEST_URL ++ "/xml",
+  Profile =
+    #http_request_profile{
+      url = Url,
+      method = get,
+      http_options = [{timeout, 1}] %% very small timeout
+    },
+
+  Expected1 = {error,
+    <<"[{failed_connect,[{to_address,{\"httpbin.org\",443}},{inet,[inet],timeout}]},\n {failed_connect,[{to_address,{\"httpbin.org\",443}},{inet,[inet],timeout}]},\n {failed_connect,[{to_address,{\"httpbin.org\",443}},{inet,[inet],timeout}]}]">>},
+  Expected2 = {error,<<"[timeout,timeout,timeout]">>},
+  case http_client:request( Profile) of
+    E when E == Expected1; E == Expected2 ->
+      ct:pal("Several_attempts_with_timeout_err OK ~p", [E]),
+      ok;
+    Wrong ->
+      ct:pal("Several_attempts_with_timeout_err FAIL ~p", [Wrong]),
+      {fail, <<"Several_attempts_with_timeout_err FAIL">>}
   end.

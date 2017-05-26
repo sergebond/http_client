@@ -95,17 +95,18 @@ req(Method, Params, #http_request_profile{attempts = Attempts} = Profile) ->
   try_req(Method, Params, Profile, Attempts, []).
 
 try_req(_Method, _Params, _Profile, 0, Errors) ->
-  throw({error, Errors}); %% @todo change somehow consist of error
+  throw({error, unicode:characters_to_binary( io_lib:format("~p", [Errors]) )}); %% @todo change somehow consist of error
 
-try_req(Method, Params, #http_request_profile{options = Opts, http_options = Hopts, attempts = Attempts, delay = Delay} = Profile, AttemptsRemain, Errors) ->
+try_req(Method, Params, #http_request_profile{options = Opts, http_options = Hopts, attempts = Attempts, delay = Delay0} = Profile, AttemptsRemain, Errors) ->
   Resp =  httpc:request(Method, Params, Hopts, Opts),
   case Resp of
     {ok, {{_HTTPVer, Status, _StatusPhrase}, Head, Body}} ->
       #http_response{ status = Status, head = Head, body = Body };
-    {error, {Error, Reas}} -> %% @todo logging
-      Delay = (Attempts - AttemptsRemain) * 2 * Delay,
+    {error, Error} -> %% @todo logging
+      Delay = (Attempts - AttemptsRemain) * 2 * Delay0,
       timer:sleep(Delay),
-      try_req(Method, Params, Profile, AttemptsRemain - 1, [{Error, Reas}|Errors]) %% @todo logging
+      io:format("+++++Doing attempt ~p", [Attempts - AttemptsRemain]), %% @todo logging
+      try_req(Method, Params, Profile, AttemptsRemain - 1, [Error|Errors]) %% @todo logging
   end.
 
 resolve_response(#http_response{status = 200, head = Head, body = Body} = Resp, #http_request_profile{resp_converter = Converter}) ->
