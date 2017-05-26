@@ -8,15 +8,15 @@
   request/2,
   request/3 ]).
 
--spec request(#http_request_profile{}) -> #http_response{}|{error, term()}.
+-spec request(profile()) -> response()|{error, term()}.
 request(Profile) ->
   request("", [], Profile).
 
--spec request(term(), #http_request_profile{}) -> #http_response{}|{error, term()}.
+-spec request(term(), profile()) -> response()|{error, term()}.
 request(Body, Profile) ->
   request(Body, "", Profile).
 
--spec request(term(), list()|binary(), #http_request_profile{}) -> #http_response{}|{error, term()}.
+-spec request(term(), list()|binary(), profile()) -> response()|{error, term()}.
 request( Body, QueryString, Profile) when is_record(Profile, http_request_profile), is_list(QueryString) ->
   try
     make_request(Body, QueryString, Profile)

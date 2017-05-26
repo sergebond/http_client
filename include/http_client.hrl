@@ -1,5 +1,9 @@
 -author("srg").
 
+-export_type([
+  profile/0,
+  response/0]).
+
 -define(DELAY, 500).
 -define(MAX_ATTEMPTS, 3).
 
@@ -28,3 +32,6 @@
   head :: proplists:proplist(),
   body :: term()
 }).
+
+-type profile() :: #http_request_profile{}.
+-type response() :: #http_response{}.
