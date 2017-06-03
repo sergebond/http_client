@@ -33,10 +33,11 @@ make_request( Body, QueryString, #http_request_profile{method = Method, url = Ur
   Res = req(Method, Params, Profile),
   resolve_response(Res, Profile).
 
-get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head}) when GetOrHead == get; GetOrHead == head ->
+get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head0}) when GetOrHead == get; GetOrHead == head ->
+  Head = convert_head(Head0),
   {Url, Head};
 
-get_params(Url, Body, #http_request_profile{method = Method, headers = Head, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
+get_params(Url, Body, #http_request_profile{method = Method, headers = Head0, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
   ContentType = get_content_type(CT, CS),
   SerializedBody =
     try serialize_body(CT, Body) of
@@ -46,7 +47,11 @@ get_params(Url, Body, #http_request_profile{method = Method, headers = Head, con
       _:_ ->
         error_mess("Could not serialize '~p' body ~n~p ", [CT, Body])
     end,
+  Head = convert_head(Head0),
   {Url, Head, ContentType, SerializedBody}.
+
+convert_head(Head) ->
+  lists:map(fun({K,V}) -> {hc_utils:to_str(K), hc_utils:to_str(V)} end, Head).
 
 -spec serialize_body(string(), list()|proplists:proplist()) -> {ok, term()}|{error, term()}.
 serialize_body(_, []) -> <<>>;

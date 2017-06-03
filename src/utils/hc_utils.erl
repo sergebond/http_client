@@ -15,6 +15,7 @@
   bjoin/1,
   bjoin/2,
   to_bin/1,
+  to_str/1,
   urlencode/1,
   get_unixtime/0,
   join_form/1
@@ -160,6 +161,13 @@ to_bin(X) when is_integer(X) -> integer_to_binary(X);
 to_bin(X) when is_atom(X) -> atom_to_binary(X, utf8);
 to_bin(X) when is_float(X) -> float_to_binary(X, [{decimals, 4}]).
 
+%% @doc universal converter to string(list)
+-spec to_str(binary()|list()|integer()|atom()|float()) -> list().
+to_str(X) when is_list(X) -> X;
+to_str(X) when is_binary(X) -> binary_to_list(X);
+to_str(X) when is_integer(X) -> integer_to_list(X);
+to_str(X) when is_atom(X) -> atom_to_list(X);
+to_str(X) when is_float(X) -> float_to_list(X,[{decimals, 4}]).
 
 %%  HTTP_UTILS
 %%______________________________________________________________________________________________________________________

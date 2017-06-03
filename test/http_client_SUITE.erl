@@ -13,7 +13,6 @@
 
 all() ->
   [
-%%    {group, all}
     {group, get},
     {group, post},
     {group, response_decode},
@@ -23,18 +22,19 @@ all() ->
 
 groups() ->
   [
-    {all, [parallel], [
-      {group, get},
-      {group, post},
-      {group, response_decode},
-      {group, http_codes},
-      {group, errors}
-    ]},
+%%    {all, [parallel], [
+%%      {group, get},
+%%      {group, post},
+%%      {group, response_decode},
+%%      {group, http_codes},
+%%      {group, errors}
+%%    ]},
     {get, [parallel],
       [
         get_json_auto,
         get_json_none,
         get_json_query_string,
+        get_json_headers,
         get_json_bad
       ]},
     {post, [parallel],
@@ -50,7 +50,7 @@ groups() ->
       ]},
     {http_codes, [parallel],
       [
-        '405'
+        '405' %% @todo codes: redirect etc
       ]},
     {errors, [parallel],
       [
@@ -125,6 +125,37 @@ get_json_query_string(Config) ->
       {fail, <<"fail">>}
   end.
 
+get_json_headers(Config) ->
+  Url = ?TEST_URL ++ "/get",
+  Profile =
+    #http_request_profile{
+      url = Url,
+      method = get,
+      resp_converter = json,
+      headers = [{header1, value1},
+        {<<"header2">>, <<"value2">>},
+        {"header3", "value3"}]
+    },
+  QueryString = [
+    {<<"aoo">>, <<"1">>},
+    {<<"bar">>, <<"2">>},
+    {<<"baz">>, <<"qwerty">>}
+  ],
+  #http_response{status = 200, head = Head, body = Body } = http_client:request(_BodyO = [], QueryString, Profile),
+  BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(hc_utils:join_form(QueryString))),
+  ct:pal(" Head ~p~nBody ~p", [Head, Body]),
+  ExpectedHead = [{<<"Connection">>,<<"close">>},
+    {<<"Header1">>,<<"value1">>},
+    {<<"Header2">>,<<"value2">>},
+    {<<"Header3">>,<<"value3">>},
+    {<<"Host">>,<<"httpbin.org">>}],
+  case Body of
+    [{<<"args">>, QueryString}, {<<"headers">>, ExpectedHead}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
+    Bad ->
+      ct:pal("get_json_headers FAILED Result ~p", [Bad]),
+      {fail, <<"fail">>}
+  end.
+
 get_json_bad(Config) ->
   Url = ?TEST_URL ++ "/get",
   Profile =
@@ -141,6 +172,8 @@ get_json_bad(Config) ->
       ct:pal("get_json_bad FAILED Result ~p", [Bad]),
       {fail, <<"fail">>}
   end.
+
+
 
 %% POST
 %%______________________________________________________________________________________________________________________
