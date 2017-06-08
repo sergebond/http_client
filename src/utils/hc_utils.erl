@@ -11,7 +11,6 @@
   from_json/1,
   get_value/2,
   get_value/3,
-  config/2,
   bjoin/1,
   bjoin/2,
   to_bin/1,
@@ -147,13 +146,6 @@ bjoin([H|[]], _Sep) when is_binary(H) ->
 bjoin([H|T], Sep) when is_binary(H) ->
   << H/bitstring, Sep/bitstring, (bjoin(T, Sep))/bitstring >>.
 
-config(Key, Config) when is_atom(Key) ->
-  case get_value(Key, Config) of
-    undefined ->
-      throw({error, not_found});
-    Value -> Value
-  end.
-
 -spec to_bin(binary()|list()|integer()|atom()|float()) -> binary().
 to_bin(X) when is_binary(X) -> X;
 to_bin(X) when is_list(X) -> list_to_binary(X);
@@ -178,8 +170,6 @@ join_form(Form) ->
 -spec urlencode(B) -> B when B::binary().
 urlencode(B) ->
   urlencode(B, <<>>).
-
-%%{{node[  ].hfwef}}
 
 urlencode(<< $!, Rest/bits >>, Acc) -> urlencode(Rest, << Acc/bits, $! >>);
 urlencode(<< $$, Rest/bits >>, Acc) -> urlencode(Rest, << Acc/bits, $$ >>);
@@ -283,7 +273,6 @@ hex(12) -> $C;
 hex(13) -> $D;
 hex(14) -> $E;
 hex(15) -> $F.
-
 
 
 -spec x_www_form_urlencoded(binary()) -> list({binary(), binary() | true}).

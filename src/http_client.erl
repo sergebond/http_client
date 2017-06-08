@@ -130,12 +130,13 @@ resolve_response(#http_response{status = Status, body = Body} = Resp, _) when St
   Resp#http_response{body = Body}.
 
 resp_body_as_term(auto, BinaryBody, Head) ->
-  ContentType = hc_utils:get_value("content-type", Head),
+  ContentType = hc_utils:get_value("content-type", Head, "text/plain"),
   ConvertFrom =
     case ContentType of
       "application/json" ++ _ -> json; %% todo text/json
       "application/xml" ++ _ -> xml; %% todo text/xml
       "application/x-www-form-urlencoded" ++ _ -> 'x-form';
+      "text/plain" ++ _ -> none;
       _ -> error_mess( "Unknown content type ~p", [ContentType])
     end,
   resp_body_as_term(ConvertFrom, BinaryBody, Head);
