@@ -20,7 +20,7 @@
   content_type = "text/plain" :: content_type(),
   charset = "charset=utf-8" :: string(),
   headers = [] :: proplists:proplist()|[],
-  http_options = [] :: proplists:proplist()|[], %%{timeout, timer:seconds(5)}
+  http_options = [{autoredirect, false}] :: proplists:proplist()|[], %%{timeout, timer:seconds(5)}
   options = [{body_format, binary}] :: proplists:proplist()|[],
   attempts = ?MAX_ATTEMPTS,
   delay = ?DELAY,
