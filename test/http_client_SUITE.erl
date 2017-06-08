@@ -94,8 +94,8 @@ get_json_none(Config) ->
   BinUrl = list_to_binary(Url),
   #http_response{status = 200, head = Head, body = Body } = http_client:request(Profile),
   ct:pal("get_json_none Head ~p~nBody ~p", [Head, Body]),
-  ?assertMatch(#{<<"url">> := BinUrl}, maps:from_list(hc_utils:from_json(Body))),
-  case hc_utils:from_json(Body) of
+  ?assertMatch(#{<<"url">> := BinUrl}, maps:from_list(eutils:from_json(Body))),
+  case eutils:from_json(Body) of
     [{<<"args">>, _}, {<<"headers">>,_}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
     Bad ->
       ct:pal("get_json_none FAILED Result ~p", [Bad]),
@@ -116,7 +116,7 @@ get_json_query_string(Config) ->
     {<<"baz">>, <<"qwerty">>}
   ],
   #http_response{status = 200, head = Head, body = Body } = http_client:request(_BodyO = [], QueryString, Profile),
-  BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(hc_utils:join_form(QueryString))),
+  BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(eutils:join_form(QueryString))),
   ct:pal("get_query_string Head ~p~nBody ~p", [Head, Body]),
   case Body of
     [{<<"args">>, QueryString}, {<<"headers">>,_}, {<<"origin">>, _}, {<<"url">>, BinUrl}] -> Config;
@@ -142,7 +142,7 @@ get_json_headers(Config) ->
     {<<"baz">>, <<"qwerty">>}
   ],
   #http_response{status = 200, head = Head, body = Body } = http_client:request(_BodyO = [], QueryString, Profile),
-  BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(hc_utils:join_form(QueryString))),
+  BinUrl = list_to_binary(Url ++ "?" ++ binary_to_list(eutils:join_form(QueryString))),
   ct:pal(" Head ~p~nBody ~p", [Head, Body]),
   ExpectedHead = [{<<"Connection">>,<<"close">>},
     {<<"Header1">>,<<"value1">>},
@@ -190,7 +190,7 @@ post_json(Config) ->
 
   #http_response{status = 200, head = _Head, body = RespBody } = http_client:request(ReqBody, Profile),
   ct:pal("post_json ~nResponse Body ~p", [RespBody]),
-  JsonBody = hc_utils:to_json( ReqBody ),
+  JsonBody = eutils:to_json( ReqBody ),
   BinUrl = list_to_binary(Url),
   case maps:from_list(RespBody) of
     #{<<"data">> := JsonBody  , <<"json">> := ReqBody, <<"url">> := BinUrl } -> Config;
