@@ -5,7 +5,7 @@
   response/0]).
 
 -define(DELAY, 500).
--define(MAX_ATTEMPTS, 3).
+-define(DEFAULT_MAX_ATTEMPTS, 1).
 
 -type content_type() :: string().
 %% "application/json"| "application/xml" | "multipart/form-data" | "application/x-www-form-urlencoded"
@@ -22,7 +22,7 @@
   headers = [] :: proplists:proplist()|[],
   http_options = [{autoredirect, false}] :: proplists:proplist()|[], %%{timeout, timer:seconds(5)}
   options = [{body_format, binary}] :: proplists:proplist()|[],
-  attempts = ?MAX_ATTEMPTS,
+  attempts = ?DEFAULT_MAX_ATTEMPTS,
   delay = ?DELAY,
   resp_converter = auto :: format() | auto
 }).
