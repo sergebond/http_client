@@ -240,7 +240,7 @@ post_x_form(Config) ->
   end.
 
 post_binary(Config) ->
-  Url = ?TEST_URL ++ "/post",
+  Url = eutils:to_bin(?TEST_URL ++ "/post"),
   Profile =
     #http_request_profile{
       url = Url,
@@ -249,9 +249,8 @@ post_binary(Config) ->
   Body = <<"Some binary body">>,
   #http_response{status = 200, head = _Head, body = RespBody } = http_client:request(Body, Profile),
   ct:pal("post_binary ~nResponse Body ~p", [RespBody]),
-  BinUrl = list_to_binary(Url),
   case maps:from_list(RespBody) of
-    #{ <<"data">> := Body, <<"url">> := BinUrl } -> Config;
+    #{ <<"data">> := Body, <<"url">> := Url } -> Config;
     Bad ->
       ct:pal("post_binary FAILED Result ~p", [Bad]),
       {fail, Config}
@@ -319,7 +318,8 @@ several_attempts_with_timeout_err(Config) ->
     #http_request_profile{
       url = Url,
       method = get,
-      http_options = [{timeout, 1}] %% very small timeout
+      http_options = [{timeout, 1}], %% very small timeout
+      attempts = 3
     },
 
   Expected1 = {error,

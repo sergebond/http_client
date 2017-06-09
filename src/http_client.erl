@@ -35,7 +35,7 @@ make_request( Body, QueryString, #http_request_profile{method = Method, url = Ur
 
 get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head0}) when GetOrHead == get; GetOrHead == head ->
   Head = convert_head(Head0),
-  {Url, Head};
+  {eutils:to_str(Url), Head};
 
 get_params(Url, Body, #http_request_profile{method = Method, headers = Head0, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
   ContentType = get_content_type(CT, CS),
@@ -48,7 +48,7 @@ get_params(Url, Body, #http_request_profile{method = Method, headers = Head0, co
         error_mess("Could not serialize '~p' body ~n~p ", [CT, Body])
     end,
   Head = convert_head(Head0),
-  {Url, Head, ContentType, SerializedBody}.
+  {eutils:to_str(Url), Head, ContentType, SerializedBody}.
 
 convert_head(Head) ->
   lists:map(fun({K,V}) -> {eutils:to_str(K), eutils:to_str(V)} end, Head).
@@ -110,7 +110,6 @@ try_req(Method, Params, #http_request_profile{options = Opts, http_options = Hop
     {error, Error} -> %% @todo logging
       Delay = (Attempts - AttemptsRemain) * 2 * Delay0,
       timer:sleep(Delay),
-      io:format("+++++Doing attempt ~p", [Attempts - AttemptsRemain]), %% @todo logging
       try_req(Method, Params, Profile, AttemptsRemain - 1, [Error|Errors]) %% @todo logging
   end.
 
