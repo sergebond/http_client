@@ -37,7 +37,8 @@ get_params(Url, _Body, #http_request_profile{method = GetOrHead, headers = Head0
   Head = convert_head(Head0),
   {eutils:to_str(Url), Head};
 
-get_params(Url, Body, #http_request_profile{method = Method, headers = Head0, content_type = CT, charset = CS}) when Method == post; Method == put; Method == patch   ->
+get_params(Url, Body, #http_request_profile{method = Method, headers = Head0, content_type = CT, charset = CS})
+      when Method == post; Method == put; Method == patch; Method == delete; Method == options ->
   ContentType = get_content_type(CT, CS),
   SerializedBody =
     try serialize_body(CT, Body) of
