@@ -87,13 +87,16 @@ get_content_type(_,_) ->
   error_mess(<< "'ContentType' and 'Charset' must be a strings" >> ).
 
 -spec get_url(string(), proplists:proplist()|[]|binary()) -> nonempty_string()|no_return().
+
+get_url(QS, Url0) when is_binary(Url0) ->
+  get_url(QS, eutils:to_str(Url0));
 get_url([], Url0) -> Url0;
 get_url(QS, Url0) when is_list(Url0), is_list(QS) ->
   Url0 ++ "?" ++ binary_to_list(eutils:join_form(QS));
 get_url(QS, Url0) when is_list(Url0), is_binary(QS) ->
   Url0 ++ "?" ++ binary_to_list(QS);
 get_url(_,_) ->
-  error_mess( <<"'Url' must be a string">> ).
+  error_mess( <<"'Url' must be a string or binary">> ).
 
 req(Method, Params, #http_request_profile{attempts = Attempts} = Profile) ->
   ok = application:ensure_started(inets),

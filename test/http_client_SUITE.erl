@@ -65,15 +65,15 @@ init_per_suite(Config) ->
 end_per_suite(Config) ->
   Config.
 
-get_json_auto(Config) ->
-  Url = ?TEST_URL ++ "/get",
+get_json_auto(_Config) ->
+  Url = eutils:to_bin( ?TEST_URL ++ "/get" ),
   Profile =
     #http_request_profile{
       url = Url,
       method = get,
       resp_converter = auto
     },
-  BinUrl = list_to_binary(Url),
+  BinUrl = eutils:to_bin(Url),
   #http_response{status = 200, head = Head, body = Body } = http_client:request(Profile),
   ct:pal("get_json_auto Head ~p~nBody ~p", [Head, Body]),
   case Body of
